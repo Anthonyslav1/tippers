@@ -1,10 +1,10 @@
 # Voting System API Documentation
 
-This document describes the REST API endpoints for the decentralized voting system.
+This document describes the REST API endpoints for the decentralized voting system, now integrated into the tippers-main backend.
 
 ## Base URL
 ```
-http://localhost:3000
+http://localhost:3000/api/voting
 ```
 
 ## Authentication
@@ -124,7 +124,12 @@ Invalid candidate:
 }
 ```
 
-### 5. Get Winner
+### 5. Set Voting Dates (Owner Only)
+**POST** `/set-dates`
+
+Set the start and end time for the voting period.
+
+### 6. Get Winner
 **GET** `/winner`
 
 Returns the candidate with the highest vote count. Can only be called after voting has ended.
@@ -150,31 +155,37 @@ Returns the candidate with the highest vote count. Can only be called after voti
 }
 ```
 
+### 7. Get Voting Dates
+**GET** `/dates`
+
+Returns the start and end time for the voting period.
+
 ## Setup Instructions
 
-### 1. Start Hardhat Node
-```bash
-npm run node
-```
-
-### 2. Deploy Contract
-```bash
-npm run deploy:local
-```
-
-### 3. Start API Server
-```bash
-npm start
-```
-
-### 4. Test API
-```bash
-npm run test:api
-```
+1. **Install dependencies**
+   ```sh
+   npm install
+   ```
+2. **Start Hardhat Node**
+   ```sh
+   npm run node
+   ```
+3. **Deploy Contract**
+   ```sh
+   npm run deploy:local
+   ```
+4. **Start API Server**
+   ```sh
+   npm run server
+   ```
+   Or, for all at once (node, deploy, server):
+   ```sh
+   npm run voting:dev
+   ```
 
 ## Environment Variables
 
-Create a `.env` file with the following variables:
+Create a `.env` file in `tippers-main` with the following variables:
 
 ```env
 CONTRACT_ADDRESS=0x5FbDB2315678afecb367f032d93F642f64180aa3
@@ -187,26 +198,26 @@ PORT=3000
 
 1. **Add a candidate:**
 ```bash
-curl -X POST http://localhost:3000/candidates \
+curl -X POST http://localhost:3000/api/voting/candidates \
   -H "Content-Type: application/json" \
-  -d '{"name": "John Doe", "party": "Democratic Party"}'
+  -d '{"name": "John Doe", "party": "Democratic Party", "ownerAddress": "<OWNER_ADDRESS>"}'
 ```
 
 2. **Get all candidates:**
 ```bash
-curl http://localhost:3000/candidates
+curl http://localhost:3000/api/voting/candidates
 ```
 
 3. **Cast a vote:**
 ```bash
-curl -X POST http://localhost:3000/vote \
+curl -X POST http://localhost:3000/api/voting/vote \
   -H "Content-Type: application/json" \
-  -d '{"accountAddress": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", "candidateIndex": 1}'
+  -d '{"accountAddress": "<ACCOUNT_ADDRESS>", "candidateIndex": 1}'
 ```
 
 4. **Get winner:**
 ```bash
-curl http://localhost:3000/winner
+curl http://localhost:3000/api/voting/winner
 ```
 
 ### Using JavaScript/Node.js
@@ -214,44 +225,8 @@ curl http://localhost:3000/winner
 ```javascript
 const axios = require('axios');
 
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = 'http://localhost:3000/api/voting';
 
 // Add candidate
 const addCandidate = async (name, party) => {
-  const response = await axios.post(`${BASE_URL}/candidates`, { name, party });
-  return response.data;
-};
-
-// Get candidates
-const getCandidates = async () => {
-  const response = await axios.get(`${BASE_URL}/candidates`);
-  return response.data;
-};
-
-// Cast vote
-const castVote = async (accountAddress, candidateIndex) => {
-  const response = await axios.post(`${BASE_URL}/vote`, { accountAddress, candidateIndex });
-  return response.data;
-};
-
-// Get winner
-const getWinner = async () => {
-  const response = await axios.get(`${BASE_URL}/winner`);
-  return response.data;
-};
-```
-
-## Error Handling
-
-All endpoints return appropriate HTTP status codes:
-
-- `200`: Success
-- `400`: Bad Request (missing fields, already voted, etc.)
-- `500`: Internal Server Error (contract not deployed, blockchain issues, etc.)
-
-## Security Notes
-
-- Only the contract owner can add candidates
-- Each account can vote only once
-- Voting is restricted to the configured time period
-- All transactions are signed and verified on the blockchain 
+  const response = await axios.post(`
